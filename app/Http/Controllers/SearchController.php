@@ -50,7 +50,7 @@ class SearchController extends Controller
     }
 
     //Search in OMDB API
-    public function searchOmdb(String $title)
+    public function searchOmdb($title)
     {
         $titleX = preg_replace('/\s+/', '+', $title);
         $page = file_get_contents("http://www.omdbapi.com/?t={$titleX}&plot=full&r=json");
@@ -73,7 +73,7 @@ class SearchController extends Controller
     }
 
     //Search in Tunefind API
-    public function searchTunefind(String $title,$year)
+    public function searchTunefind($title,$year)
     {
         $username='a904641145de3ef28ea19bb65d4e5e7d';
         $password='53f2b51644b997caac2d531af279cc49';
@@ -136,7 +136,7 @@ class SearchController extends Controller
     }
 
     //Search in Spotify API
-    public function searchspotify(Array $soundtracks)
+    public function searchspotify($soundtracks)
     {
         $information=[];
         foreach ($soundtracks as $item){
