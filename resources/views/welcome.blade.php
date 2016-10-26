@@ -25,6 +25,14 @@
             </div>
             @endif
             <div class="content">
+                @if(Session::has('message'))
+                <br>
+                <div class="alert alert-danger text-center" >
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    <strong>{{Session::get('message')}}</strong>
+                </div>
+                <br>
+                @endif
                 <div class="title m-b-md">
                     <h1>Testsida</h1>
                 </div>

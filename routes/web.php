@@ -16,4 +16,4 @@ Route::get('/', function () {
 });
 
 //Route::get('/search','SearchController@search');
-Route::post('/search','SearchController@searchTunefind');
+Route::post('/search','SearchController@search');
