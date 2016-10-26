@@ -22,25 +22,31 @@ class SearchController extends Controller
         //Get user-input.
         $movietitle=$request->titleinput;
         //print_r($movietitle);
-        
+
         //Get movieinformation.
         $movieinformation=$this->searchOmdb($movietitle);
-        
+
         if ($movieinformation['status']==0){
-             \Session::flash('message', 'Filmtitel hittades ej!');
+            \Session::flash('message', 'Filmtitel hittades ej!');
             return redirect('/')->withInput();     
         }
 
         else{
             $soundtrackinformation=$this->searchTunefind($movieinformation['title'],$movieinformation['year']);
+            //print_r($soundtrackinformation);
+            
+            if($soundtrackinformation){
+                $spotifyinformation=$this->searchSpotify($soundtrackinformation);
+                $spotifytrackset=implode(',',$spotifyinformation);
+                return view('main',compact('spotifytrackset'));
+            }
+
+            else{
+                \Session::flash('message', 'Inga soundtracks hittades');
+                return view ('main');
+            }
+
         }
-        
-       
-        //Get soundtracks from Tunefind
-
-        //Get spotify-uri for soundtracks via Spotify-API.
-
-        //Return view with spotify-uri array and movieinformation array.
     }
 
     //Search in OMDB API
@@ -52,16 +58,16 @@ class SearchController extends Controller
 
         if($data['Response']=='False'){
             $information=['status'=>0];
-            
+
         }else{
             $title=$data['Title'];
             $year=$data['Year'];
             $plot=$data['Plot'];
             $poster=$data['Poster'];
-            
+
             $information=['status'=>1,'title'=>$title,'year'=>$year,'plot'=>$plot,'poster'=>$poster];
         }
-        
+
         return $information;
 
     }
@@ -85,29 +91,79 @@ class SearchController extends Controller
         //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
-        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);   //get status code
         $result=curl_exec ($ch);
+        $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);//get status code
         curl_close ($ch);
-        
-        if($status_code!="200"){
+        //print_r($status_code);
+
+
+        if($status_code=="200"){
             $data = json_decode($result, true);
             $information=[];
             foreach ($data['songs'] as $song){
                 $information[]=['title'=>$song['name'],'artist'=>$song['artist']['name']];
             }
+        return $information;
             
         }
+
+        elseif($status_code!="200"){
+
+            $URL="https://www.tunefind.com/api/v1/movie/{$title}-{$year}";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL,$URL);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+            //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+            curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+            curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");  //get status code
+            $result=curl_exec ($ch);
+            $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE); 
+            curl_close ($ch);
+            
+            if($status_code=="200"){
+                $data = json_decode($result, true);
+                $information=[];
+                foreach ($data['songs'] as $song){
+                    $information[]=['title'=>$song['name'],'artist'=>$song['artist']['name']];
+                }
+            return $information; 
+            }
+           
+        }
         
-       return $information;
-
-
 
     }
 
     //Search in Spotify API
-    public function searchspotify(String $artist, String $title)
+    public function searchspotify(Array $soundtracks)
     {
-        //
+        $information=[];
+        foreach ($soundtracks as $item){
+
+            $name=$item['artist'];
+            $name = preg_replace('/\s+/', '-', $name);
+            $name=strtolower($name);
+
+            $title=$item['title'];
+            $title = preg_replace('/\s+/', '-', $title);
+            $title=strtolower($title);
+
+            $page = file_get_contents("https://api.spotify.com/v1/search?q=track%3A{$title}+artist%3A{$name}&type=track&limit=1");
+            $data = json_decode($page, true);
+
+            if($data['tracks']['total']!=0){
+                $uri=$data['tracks']['items'][0]['id'];
+                array_push($information,$uri);
+
+            }
+
+
+        }
+
+        return $information;
+
+
     }
 
 
