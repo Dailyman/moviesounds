@@ -17,3 +17,7 @@ Route::get('/', function () {
 
 //Route::get('/search','SearchController@search');
 Route::post('/search','SearchController@search');
+
+Route::post('/create','CreatePLController@index');
+
+Route::get('/create','CreatePLController@create');

@@ -46,7 +46,14 @@
                         {!! csrf_field() !!}
                         <label for="text"><h2>Mata in Filmtitel</h2></label>
                         <input type="text" class="form-control" name="titleinput" placeholder="Title">
+                        <br>
                         <button type="submit" class="btn btn-danger" id="searchbtn"> Sök
+                        </button>
+                    </form>
+                    <br>
+                    <form method="post" action="{{ url('/create') }}">
+                        {!! csrf_field() !!}
+                        <button type="submit" class="btn btn-danger" id="createbtn"> Skapa Playlist
                         </button>
                     </form>
 

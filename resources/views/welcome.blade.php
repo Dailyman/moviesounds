@@ -45,7 +45,6 @@
                         <button type="submit" class="btn btn-danger" id="searchbtn"> Sök
                         </button>
                     </form>
-
                 </div>
             </div>
         </div>
