@@ -4,49 +4,50 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Http\Requests;
-
-
-class SearchController extends Controller
+class APIController extends Controller
 {
-
-
-    public function index()
+    //Main function for handling API-requests.
+    public function index(Request $request)
     {
-        //
+        $filters = $request->query('t');
+        $jsoninfo = $this->search($filters);
+        return json_encode($jsoninfo);
     }
-
     //Main function for finding information and soundtracks.
-    public function search(Request $request)
+    public function search($movietitle)
     {
-        //Get user-input.
-        $movietitle=$request->titleinput;
-
         //Get movieinformation.
         $movieinformation=$this->searchOmdb($movietitle);
 
         //Controll if movie was found in Omdb-API.
         if ($movieinformation['status']==0){
-            \Session::flash('message', 'Movie was not found !');
-            return redirect('/')->withInput();     
+            $arr = array('Status' => 0);
+            return $arr;
         }
 
         else{
             $soundtrackinformation=$this->searchTunefind($movieinformation['title'],$movieinformation['year']);
 
-            //Check if soundtrackinformation exists.
+            //Check if soundtrackinformation exists.Returns array.
             if($soundtrackinformation){
                 $spotifyinformation=$this->searchSpotify($soundtrackinformation);
-                $spotifytrackset=implode(',',$spotifyinformation);
-                //$_SESSION['tracks']=$spotifyinformation;
-                //session(['tracks' => $spotifytrackset]);
-                \Session::put('tracks',$spotifyinformation);
-                return view('main',compact('spotifytrackset'));
+                array_forget($movieinformation,'status');
+                $information=array();
+                $information['status']=['status',1];
+                $information['movieinfo']=$movieinformation;
+                $information['spotifyids']=$spotifyinformation;
+                return $information;
+
             }
-            //Returns with message if no soundtracks was found.
+            //Returns array.
             else{
-                \Session::flash('message', 'No soundtracks was found !');
-                return view ('main');
+                array_forget($movieinformation,'status');
+                $information=array();
+                $spotifyids=array();
+                $information['status']=['status',2];
+                $information['movieinfo']=$movieinformation;
+                $information['spotifyids']=$spotifyids;
+                return $information;
             }
 
         }
@@ -91,7 +92,6 @@ class SearchController extends Controller
         curl_setopt($ch, CURLOPT_URL,$URL);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-        //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
         curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
         $result=curl_exec ($ch);
@@ -117,7 +117,6 @@ class SearchController extends Controller
             curl_setopt($ch, CURLOPT_URL,$URL);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
-            //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
             curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
             curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
             $result=curl_exec ($ch);
@@ -172,3 +171,4 @@ class SearchController extends Controller
 
 
 }
+

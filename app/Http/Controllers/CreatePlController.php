@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use SpotifyWebAPI;
 
+
 class CreatePlController extends Controller
 {
  /**
@@ -36,7 +37,6 @@ class CreatePlController extends Controller
 
   die();
 
-
  }
 
  /**
@@ -46,7 +46,7 @@ class CreatePlController extends Controller
      */
  public function create()
  {
-  
+
   $clientid='414d68d43e5f4fa6ba684b969063ccdb';
   $clientsecret='2b22d869dfaf481fb2c46c7296cd445d';
   $redirecturi='http://localhost:8000/create';
@@ -59,11 +59,23 @@ class CreatePlController extends Controller
 
   // Set the access token on the API wrapper
   $api->setAccessToken($accessToken);
+  $user = $api->me();
+  $username=$user->id;
 
-  $api->createUserPlaylist('oskatra', [
-   'name' => 'My shiny playlist',
+  $title=\Session::pull('title','default');
+  $title=$title.':by Moviesounds';
+
+  //Create playlist
+  $playlist=$api->createUserPlaylist($username, [
+   'name' => $title,
   ]);
+  $playlistid=$playlist->id;
+  $value = \Session::pull('tracks', 'default');
+  //$_SESSION['tracks'];
 
+  $api->addUserPlaylistTracks($username, $playlistid, $value);
+  \Session::flash('message', 'Playlist was created.');
+  return redirect('/'); 
  }
 
  /**

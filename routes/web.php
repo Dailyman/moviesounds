@@ -21,3 +21,5 @@ Route::post('/search','SearchController@search');
 Route::post('/create','CreatePLController@index');
 
 Route::get('/create','CreatePLController@create');
+
+Route::get('/api/search/','APIController@index');
